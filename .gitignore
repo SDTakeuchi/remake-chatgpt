@@ -1,0 +1,5 @@
+# 環境変数・APIキー（YAML）はコミットしない
+config/env.yaml
+
+# 依存は Docker 内でインストールするため、ローカルの node_modules は不要
+node_modules

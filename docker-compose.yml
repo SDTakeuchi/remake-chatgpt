@@ -1,0 +1,26 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    volumes:
+      # ソースをローカルと同期（編集が即反映、再ビルド不要）
+      - ./backend:/app
+      # 設定ファイル（APIキー等）をマウント。config/env.yaml は .gitignore 済み
+      - ./config:/app/config:ro
+    environment:
+      - CONFIG_PATH=/app/config/env.yaml
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      # フロントの API ルートがバックエンドへ転送する先（コンテナ間）
+      - BACKEND_URL=http://backend:3001
+    depends_on:
+      - backend

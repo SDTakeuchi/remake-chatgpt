@@ -1,0 +1,10 @@
+# agent-book 準拠（chapter04 / chapter05 のバージョンを優先）
+# https://github.com/GenerativeAgents/agent-book
+langchain-core==0.3.0
+langchain-openai==0.2.0
+pydantic==2.10.6
+# API サーバ（chapter04 で使用）
+fastapi==0.115.12
+uvicorn[standard]==0.34.0
+# 設定 (YAML)
+PyYAML==6.0.2
