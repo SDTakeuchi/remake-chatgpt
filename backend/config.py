@@ -1,6 +1,7 @@
 """YAML から LLM 設定を読み込む（docs/prompts 仕様準拠）。"""
 import os
 from pathlib import Path
+from typing import Any, TypedDict, cast
 
 import yaml
 
@@ -9,9 +10,19 @@ _default = Path(__file__).resolve().parent.parent / "config" / "env.yaml"
 CONFIG_PATH = Path(os.environ.get("CONFIG_PATH") or _default)
 
 
-def load_config() -> dict:
+class LLMConfig(TypedDict, total=False):
+    api_key: str
+    base_url: str
+    model: str
+
+
+class AppConfig(TypedDict):
+    llm: LLMConfig
+
+
+def load_config() -> AppConfig:
     raw = CONFIG_PATH.read_text(encoding="utf-8")
-    data = yaml.safe_load(raw)
-    if not data or "llm" not in data:
+    data: Any = yaml.safe_load(raw)
+    if not isinstance(data, dict) or "llm" not in data:
         raise ValueError("config must have llm section")
-    return data
+    return cast(AppConfig, data)

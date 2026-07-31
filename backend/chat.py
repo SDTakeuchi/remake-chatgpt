@@ -1,11 +1,16 @@
 """LangChain ChatOpenAI でストリーミング応答（OpenAI / Gemini OpenAI 互換 API 対応）。"""
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Mapping
+from typing import Any, TypeAlias
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.language_models import BaseChatModel
 from langchain_openai import ChatOpenAI
 
 from schemas import ChatMessage, ChatRole
+
+
+ContentBlock: TypeAlias = str | dict[str, Any]
+MessageContent: TypeAlias = str | list[ContentBlock] | None
 
 
 def to_langchain_messages(messages: list[ChatMessage]) -> list[BaseMessage]:
@@ -22,11 +27,11 @@ def to_langchain_messages(messages: list[ChatMessage]) -> list[BaseMessage]:
     return histories
 
 
-def create_chat_model(llm_config: dict) -> BaseChatModel:
+def create_chat_model(llm_config: Mapping[str, str]) -> BaseChatModel:
     """
     OpenAI または OpenAI 互換 API（Gemini 含む）で ChatOpenAI を生成。
     """
-    kwargs: dict = {
+    kwargs: dict[str, Any] = {
         "model": llm_config.get("model", "gpt-4o-mini"),
         "temperature": 0.3,
         "api_key": llm_config.get("api_key", ""),
@@ -38,7 +43,7 @@ def create_chat_model(llm_config: dict) -> BaseChatModel:
     return ChatOpenAI(**kwargs)
 
 
-def _chunk_content_to_str(content) -> str:
+def _chunk_content_to_str(content: MessageContent) -> str:
     """
     チャンク content を str に正規化（str | list[str|dict] | None 対応）。
     """
@@ -47,12 +52,14 @@ def _chunk_content_to_str(content) -> str:
     if isinstance(content, str):
         return content
     if isinstance(content, list):
-        parts = []
+        parts: list[str] = []
         for block in content:
             if isinstance(block, str):
                 parts.append(block)
             elif isinstance(block, dict) and "text" in block:
-                parts.append(block["text"])
+                text = block["text"]
+                if isinstance(text, str):
+                    parts.append(text)
         return "".join(parts)
     return str(content)
 

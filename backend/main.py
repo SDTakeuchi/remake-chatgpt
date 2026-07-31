@@ -2,11 +2,11 @@
 
 import json
 import logging
+from collections.abc import AsyncIterator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from starlette.responses import ContentStream
 
 from chat import create_chat_model, stream_chat
 from config import load_config
@@ -28,7 +28,7 @@ config = load_config()
 chat_model = create_chat_model(config["llm"])
 
 
-async def sse_chat_stream(body: ChatRequest) -> ContentStream:
+async def sse_chat_stream(body: ChatRequest) -> AsyncIterator[str]:
     """SSE: data: {"content": "..."} を送り、終了時に data: [DONE] を送る。"""
     try:
         # プロキシ等のバッファリングを防ぐため先頭で1イベント送る
@@ -52,7 +52,7 @@ async def sse_chat_stream(body: ChatRequest) -> ContentStream:
 
 
 @app.post("/chat")
-async def chat(body: ChatRequest):
+async def chat(body: ChatRequest) -> StreamingResponse:
     return StreamingResponse(
         content=sse_chat_stream(body),
         media_type="text/event-stream",
